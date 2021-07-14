@@ -52,6 +52,10 @@ void process() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+//1.优先判断手动控制
+//2.没有手动控制下，判断陀螺仪数据
+//3.如果从运动中停止下来，进行对应操作。如果从停止变为运动，进行对应操作。
+
 //  analogWrite(3, (map(analogRead(A0), 0, 1023, 0, 235)));
 //  Serial.println((map(analogRead(A0), 0, 1023, 0, 180)));
 //  pos = map(analogRead(A0), 0, 1023, 0, 180);
