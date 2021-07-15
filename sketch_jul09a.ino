@@ -11,20 +11,21 @@ MPU6050 accelgyro;
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
-void setup() {
-  // put your setup code here, to run once:
+void initServo() {
+    //舵机
+     myservo.attach(9);  // 将引脚9上的舵机与声明的舵机对象连接起来
 
-  //旋钮
-//  Serial.begin(9600);
-//  pinMode(A0,INPUT);
-//  pinMode(3,OUTPUT);
+}
 
-  //舵机
-//  myservo.attach(9);  // 将引脚9上的舵机与声明的舵机对象连接起来
+void initRoateButton() {
+    //旋钮
+    pinMode(A0,INPUT);
+    pinMode(3,OUTPUT);
+}
 
-  //接入i2c总线
+void initMPU() {
+    //接入i2c总线
     Wire.begin();
-    Serial.begin(38400);
     //初始化设备
     Serial.println("Initializing I2C devices...");
     accelgyro.initialize();
@@ -32,6 +33,14 @@ void setup() {
     //链接设备
     Serial.println("Testing device connections...");
     Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);//38400
+  initServo();
+  initMPU();
+  initRoateButton();
 }
 
 //将原始值修正
@@ -48,6 +57,13 @@ void fix() {
 //干干其他事
 void process() {
 
+}
+
+void manuControl() {
+    pos = map(analogRead(A0), 0, 1023, 0, 180);
+    myservo.write(pos);
+    delay(15);
+    return 1;
 }
 
 void loop() {
