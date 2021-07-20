@@ -4,7 +4,15 @@
 #include "MPU6050.h"
 
 Servo myservo;        // 创建一个舵机对象
-int pos = 0;          // 变量pos用来存储舵机位置
+int pos = 0;          
+int lastPos = -1;
+
+//0-静止，1-运动
+int lastState = 0;
+int lastCurrState = 0;
+int currState = 0;
+//计算两次测量的时间间隔dt，以秒为单位
+unsigned long lastTime = 0;
 
 MPU6050 accelgyro;
 
@@ -14,7 +22,6 @@ int16_t gx, gy, gz;
 void initServo() {
     //舵机
      myservo.attach(9);  // 将引脚9上的舵机与声明的舵机对象连接起来
-
 }
 
 void initRoateButton() {
@@ -54,15 +61,25 @@ void fix() {
     gz /= 131;
 }
 
-//干干其他事
-void process() {
-
+int isManu(int lpos, int currpos) {
+    //是否手动
+    if (abs(lpos - currpos) >= 5)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 void manuControl() {
-    pos = map(analogRead(A0), 0, 1023, 0, 180);
     myservo.write(pos);
-    delay(15);
+    delay(50);
+}
+
+int getCurrState() {
+    if (abs(ax) < 3 && abs(ay) < 3 && abs(az) < 3)
+    {
+        return 0;
+    }
     return 1;
 }
 
@@ -71,20 +88,60 @@ void loop() {
 //1.优先判断手动控制
 //2.没有手动控制下，判断陀螺仪数据
 //3.如果从运动中停止下来，进行对应操作。如果从停止变为运动，进行对应操作。
+    Serial.println((map(analogRead(A0), 0, 1023, 0, 60)));
+    pos = map(analogRead(A0), 0, 1023, 0, 60);
+    if (lastPos == -1)
+    {
+        lastPos = pos;
+    }
 
-//  analogWrite(3, (map(analogRead(A0), 0, 1023, 0, 235)));
-//  Serial.println((map(analogRead(A0), 0, 1023, 0, 180)));
-//  pos = map(analogRead(A0), 0, 1023, 0, 180);
-//  myservo.write(pos);  
-//  delay(15);
+    if(isManu(lastPos, pos) == 1) {
+        lastPos = pos;
+        manuControl();
+        lastTime = 0;
+        return;
+    }
 
     accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-
-    //对原始价值做处理
+    // accelgyro.getAcceleration(&ax, &ay, &az);
+    // accelgyro.getRotation(&gx, &gy, &gz);
     fix();
-
-    //干干其他事
-    process();
+    //计算两次测量的时间间隔dt，以秒为单位
+    unsigned long nCurTime = micros();
+    if (lastTime == 0)
+    {
+        lastTime = nCurTime;
+    }
+    
+    currState = getCurrState();
+    if (currState == lastCurrState)
+    {
+        if (nCurTime - lastTime > 5)
+        {
+            //更新时间
+            lastTime = nCurTime;
+            if (currState != lastState)
+            {
+                //更新状态
+                lastState = currState;
+                if (currState == 1)
+                {
+                    //由静止变为运动
+                    myservo.write(60);
+                    delay(50);
+                }else {
+                    //由运动变为静止
+                    myservo.write(0);
+                    delay(50);
+                }
+            }
+        }
+        
+    }else {
+        //状态变化，直接更新时间
+        lastTime = nCurTime;
+        lastCurrState = currState;
+    }
 
     Serial.print("a/g:\t");
     //x,y,z轴加速度
@@ -97,7 +154,7 @@ void loop() {
     Serial.print(gy); Serial.print("\t");
     Serial.println(gz);
 
-    delay(500);
+    delay(100);
 }
 
 void test() {
@@ -109,4 +166,10 @@ void test() {
        myservo.write(pos);        // 写角度到舵机     
        delay(500);                 // 延时15ms让舵机转到指定位置
     } 
+
+    //    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+    // these methods (and a few others) are also available
+//    accelgyro.getAcceleration(&ax, &ay, &az);
+    // accelgyro.getRotation(&gx, &gy, &gz);
 }
