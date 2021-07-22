@@ -13,6 +13,7 @@ int lastCurrState = 0;
 int currState = 0;
 //计算两次测量的时间间隔dt，以秒为单位
 unsigned long lastTime = 0;
+const int16_t minSpeed = 3;
 
 MPU6050 accelgyro;
 
@@ -76,7 +77,7 @@ void manuControl() {
 }
 
 int getCurrState() {
-    if (abs(ax) < 3 && abs(ay) < 3 && abs(az) < 3)
+    if (abs(ax) < minSpeed && abs(ay) < minSpeed && abs(az) < minSpeed)
     {
         return 0;
     }
@@ -106,8 +107,8 @@ void loop() {
     // accelgyro.getAcceleration(&ax, &ay, &az);
     // accelgyro.getRotation(&gx, &gy, &gz);
     fix();
-    //计算两次测量的时间间隔dt，以秒为单位
-    unsigned long nCurTime = micros();
+    //计算两次测量的时间间隔dt，以毫秒为单位，50天后溢出---每次重启都会重置
+    unsigned long nCurTime = millis();
     if (lastTime == 0)
     {
         lastTime = nCurTime;
@@ -116,7 +117,7 @@ void loop() {
     currState = getCurrState();
     if (currState == lastCurrState)
     {
-        if (nCurTime - lastTime > 5)
+        if (nCurTime - lastTime >= 5000)
         {
             //更新时间
             lastTime = nCurTime;
