@@ -13,11 +13,17 @@ int lastCurrState = 0;
 int currState = 0;
 //计算两次测量的时间间隔dt，以秒为单位
 unsigned long lastTime = 0;
-const int16_t minSpeed = 3;
+const int16_t gx_min = -10;
+const int16_t gx_max = 1;
+const int16_t gy_min = -5;
+const int16_t gy_max = 10;
+const int16_t gz_min = -5;
+const int16_t gz_max = 8;
 
 MPU6050 accelgyro;
 
 int16_t ax, ay, az;
+//-5,2,1
 int16_t gx, gy, gz;
 
 void initServo() {
@@ -77,7 +83,7 @@ void manuControl() {
 }
 
 int getCurrState() {
-    if (abs(ax) < minSpeed && abs(ay) < minSpeed && abs(az) < minSpeed)
+    if (gx < gx_max && gx > gx_min && gy < gy_max && gy > gy_min && gz < gz_max && gz > gz_min)
     {
         return 0;
     }
