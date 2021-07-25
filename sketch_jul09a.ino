@@ -123,7 +123,7 @@ void loop() {
     currState = getCurrState();
     if (currState == lastCurrState)
     {
-        if (nCurTime - lastTime >= 5000)
+        if (currState == 0 && (nCurTime - lastTime >= 5000))
         {
             //更新时间
             lastTime = nCurTime;
@@ -131,23 +131,23 @@ void loop() {
             {
                 //更新状态
                 lastState = currState;
-                if (currState == 1)
-                {
-                    //由静止变为运动
-                    myservo.write(60);
-                    delay(50);
-                }else {
-                    //由运动变为静止
-                    myservo.write(0);
-                    delay(50);
-                }
+                //由运动变为静止
+                myservo.write(0);
+                delay(50);
             }
         }
-        
     }else {
         //状态变化，直接更新时间
         lastTime = nCurTime;
         lastCurrState = currState;
+        if (currState == 1)
+        {
+            //更新状态
+            lastState = currState;
+            //由静止变为运动
+            myservo.write(60);
+            delay(50);
+        }
     }
 
     Serial.print("a/g:\t");
